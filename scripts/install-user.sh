@@ -13,5 +13,6 @@ python3 -m venv "$VENV"
 "$VENV/bin/python" -m pip install "$ROOT"
 ln -sfn "$VENV/bin/bioauth" "${HOME}/.local/bin/bioauth"
 echo "Installed: ${HOME}/.local/bin/bioauth"
-echo "Download YuNet and SFace models as described in README before enrollment."
+"$VENV/bin/bioauth" install-models
+echo "YuNet and SFace models installed with SHA256 verification."
 echo "PAM authentication has NOT been enabled."

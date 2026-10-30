@@ -43,7 +43,7 @@ source .venv/bin/activate
 pip install numpy opencv-contrib-python
 ```
 
-Download the official YuNet and SFace ONNX models separately and put them in `~/.config/bioauth/models/` or `/etc/bioauth/models/`:
+The user installer downloads and verifies YuNet and SFace ONNX models automatically. For manual setup, put them in `~/.config/bioauth/models/` or `/etc/bioauth/models/`:
 
 ```text
 face_detection_yunet_2023mar.onnx

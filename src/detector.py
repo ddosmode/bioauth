@@ -7,9 +7,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_YUNET_PATH = "/etc/bioauth/models/face_detection_yunet_2023mar.onnx"
+DEFAULT_YUNET_PATH = os.path.expanduser("~/.config/bioauth/models/face_detection_yunet_2023mar.onnx")
 if not os.path.exists(DEFAULT_YUNET_PATH):
-    DEFAULT_YUNET_PATH = os.path.expanduser("~/.config/bioauth/models/face_detection_yunet_2023mar.onnx")
+    DEFAULT_YUNET_PATH = "/etc/bioauth/models/face_detection_yunet_2023mar.onnx"
 
 class FaceDetector:
     def __init__(self, model_path: str = DEFAULT_YUNET_PATH, conf_threshold: float = 0.6, nms_threshold: float = 0.3):

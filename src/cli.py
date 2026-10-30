@@ -197,6 +197,9 @@ def main():
 
     subparsers = parser.add_subparsers(dest="command")
 
+    # models
+    subparsers.add_parser("install-models", help="Download pinned ONNX models with SHA256 verification")
+
     # enroll
     enroll_p = subparsers.add_parser("enroll")
     enroll_p.add_argument("username", nargs="?", default=os.environ.get("USER", "unknown"))
@@ -217,7 +220,11 @@ def main():
     reset_p.add_argument("--slot", choices=["primary", "alternative", "mask"])
 
     args = parser.parse_args()
-    if args.command == "enroll":
+    if args.command == "install-models":
+        from src.models import install_models
+        print(f"Models ready: {install_models()}")
+        sys.exit(0)
+    elif args.command == "enroll":
         sys.exit(cmd_enroll(args))
     elif args.command == "verify":
         sys.exit(cmd_verify(args))

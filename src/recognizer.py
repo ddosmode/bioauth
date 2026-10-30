@@ -7,9 +7,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SFACE_PATH = "/etc/bioauth/models/face_recognition_sface_2021dec.onnx"
+DEFAULT_SFACE_PATH = os.path.expanduser("~/.config/bioauth/models/face_recognition_sface_2021dec.onnx")
 if not os.path.exists(DEFAULT_SFACE_PATH):
-    DEFAULT_SFACE_PATH = os.path.expanduser("~/.config/bioauth/models/face_recognition_sface_2021dec.onnx")
+    DEFAULT_SFACE_PATH = "/etc/bioauth/models/face_recognition_sface_2021dec.onnx"
 
 class FaceRecognizer:
     def __init__(self, model_path: str = DEFAULT_SFACE_PATH, cosine_threshold: float = 0.40):
