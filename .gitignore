@@ -1,6 +1,26 @@
+# .gitignore for bioauth
 __pycache__/
 *.py[cod]
-.pytest_cache/
+*$py.class
+*.so
+
+# Environments
 .venv/
-.env
-.env.*
+env/
+venv/
+ENV/
+
+# Models & Embeddings
+*.onnx
+*.dat
+*.pkl
+
+# User biometric data
+users/
+enrollment/
+
+# Logs & temp
+*.log
+.cache/
+.pytest_cache/
+.DS_Store
