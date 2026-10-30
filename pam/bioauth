@@ -1,0 +1,10 @@
+# PAM configuration for bioauth Face Authentication
+# Add this line at the top of /etc/pam.d/sudo and /etc/pam.d/gdm-password:
+# auth sufficient pam_exec.so quiet /usr/local/bin/bioauth-pam
+
+Name: Face Authentication (BioAuth)
+Default: yes
+Priority: 260
+Auth-Type: Primary
+Auth:
+	[success=end default=ignore]	pam_exec.so quiet stdout /usr/local/bin/bioauth-pam

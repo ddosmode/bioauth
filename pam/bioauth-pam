@@ -1,0 +1,20 @@
+#!/bin/bash
+# bioauth-pam: PAM authentication wrapper for pam_exec.so
+# Exit code 0: Authentication success (Face recognized)
+# Exit code 1: Authentication failure (fallback to password)
+
+TARGET_USER="${PAM_USER:-$USER}"
+
+if [ -z "$TARGET_USER" ]; then
+    exit 1
+fi
+
+# Run bioauth CLI in quiet mode with a strict timeout of 2 seconds
+timeout 2.5 /usr/bin/python3 /home/usernarne/projects/bioauth/src/cli.py -q verify "$TARGET_USER" 2>/dev/null
+RESULT=$?
+
+if [ $RESULT -eq 0 ]; then
+    exit 0
+else
+    exit 1
+fi
