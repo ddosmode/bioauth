@@ -24,3 +24,7 @@ enrollment/
 .cache/
 .pytest_cache/
 .DS_Store
+
+build/
+dist/
+*.egg-info/

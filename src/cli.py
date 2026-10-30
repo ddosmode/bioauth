@@ -6,6 +6,7 @@ import os
 import json
 import argparse
 import logging
+import re
 import numpy as np
 import cv2
 
@@ -21,7 +22,13 @@ from src.storage import private_dir, save_embedding, load_embedding
 BASE_SYS_DIR = "/var/lib/bioauth"
 BASE_USER_DIR = os.path.expanduser("~/.config/bioauth/users")
 
+def validate_username(username: str) -> str:
+    if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", username):
+        raise ValueError("Invalid Linux username")
+    return username
+
 def get_user_dir(username: str) -> str:
+    username = validate_username(username)
     # Приоритет: системный каталог при наличии прав, иначе локальный конфиг
     if os.path.exists(BASE_SYS_DIR) and os.access(BASE_SYS_DIR, os.W_OK):
         path = os.path.join(BASE_SYS_DIR, username)
@@ -32,6 +39,7 @@ def get_user_dir(username: str) -> str:
     return str(private_dir(path))
 
 def load_user_vectors(username: str) -> list[tuple[str, np.ndarray]]:
+    username = validate_username(username)
     """Загружает все зарегистрированные векторы пользователя (primary, alternative, mask)."""
     vectors = []
     # Проверяем оба пути (системный и пользовательский)
@@ -70,7 +78,6 @@ def cmd_enroll(args):
     user_dir = get_user_dir(args.username)
     slot = args.slot
     target_vec_path = os.path.join(user_dir, f"{slot}.npy")
-    target_img_path = os.path.join(user_dir, f"{slot}.jpg")
 
     print(f"[*] Сканирование лица ({slot}) для пользователя {args.username}...")
     handler = VideoCaptureHandler(device_index=args.device, warmup_frames=5)
@@ -141,6 +148,11 @@ def cmd_verify(args):
             print("[-] Лицо не обнаружено")
         return 1
 
+    # Fail closed: never authenticate when more than one face is visible.
+    if len(faces) != 1:
+        if not args.quiet:
+            print("[-] Expected exactly one face")
+        return 1
     for face in faces:
         cand_feature = recognizer.extract_feature(frame, face)
         for slot, ref_feature in vectors:
