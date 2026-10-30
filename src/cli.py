@@ -129,18 +129,20 @@ def cmd_verify(args):
             print(f"[-] Биометрические профили не найдены для пользователя {args.username}")
         return 1
 
+    # Offline still-image verification is diagnostic only; never authenticates.
     if args.frame:
-        frame = cv2.imread(args.frame)
-        if frame is None:
-            return 2
-    else:
-        handler = VideoCaptureHandler(device_index=args.device, warmup_frames=3, timeout=1.5)
-        frame = handler.capture_frame()
-        if frame is None:
-            return 2
+        if not args.quiet:
+            print("[-] Static-image verification is disabled for authentication")
+        return 1
 
     detector = FaceDetector()
     recognizer = FaceRecognizer()
+    from src.liveness import capture_with_challenge
+    frame = capture_with_challenge(args.device, detector)
+    if frame is None:
+        if not args.quiet:
+            print("[-] Liveness challenge failed or camera unavailable")
+        return 1
 
     faces = detector.detect(frame)
     if len(faces) == 0:
