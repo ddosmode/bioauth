@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(_REAL_DIR, "..")))
 from src.capture import VideoCaptureHandler
 from src.detector import FaceDetector
 from src.recognizer import FaceRecognizer
+from src.storage import private_dir, save_embedding, load_embedding
 
 BASE_SYS_DIR = "/var/lib/bioauth"
 BASE_USER_DIR = os.path.expanduser("~/.config/bioauth/users")
@@ -28,8 +29,7 @@ def get_user_dir(username: str) -> str:
         path = os.path.join(BASE_SYS_DIR, username)
     else:
         path = os.path.join(BASE_USER_DIR, username)
-    os.makedirs(path, exist_ok=True)
-    return path
+    return str(private_dir(path))
 
 def load_user_vectors(username: str) -> list[tuple[str, np.ndarray]]:
     """Загружает все зарегистрированные векторы пользователя (primary, alternative, mask)."""
@@ -49,7 +49,7 @@ def load_user_vectors(username: str) -> list[tuple[str, np.ndarray]]:
             f_path = os.path.join(s_dir, f"{slot}.npy")
             if os.path.exists(f_path) and slot not in seen_slots:
                 try:
-                    vec = np.load(f_path)
+                    vec = load_embedding(f_path)
                     vectors.append((slot, vec))
                     seen_slots.add(slot)
                 except Exception:
@@ -58,7 +58,7 @@ def load_user_vectors(username: str) -> list[tuple[str, np.ndarray]]:
         legacy_path = os.path.join(s_dir, f"{username}.npy")
         if os.path.exists(legacy_path) and "primary" not in seen_slots:
             try:
-                vec = np.load(legacy_path)
+                vec = load_embedding(legacy_path)
                 vectors.append(("primary", vec))
                 seen_slots.add("primary")
             except Exception:
@@ -91,8 +91,8 @@ def cmd_enroll(args):
         return 1
 
     feature = recognizer.extract_feature(frame, faces[0])
-    np.save(target_vec_path, feature)
-    cv2.imwrite(target_img_path, frame)
+    save_embedding(target_vec_path, feature)
+    # Raw camera frames are deliberately NOT retained by default.
 
     # Обновление meta.json
     meta_path = os.path.join(user_dir, "meta.json")
@@ -106,10 +106,11 @@ def cmd_enroll(args):
     meta[slot] = {
         "updated_at": cv2.getTickCount(),
         "vector_file": f"{slot}.npy",
-        "image_file": f"{slot}.jpg"
+        "image_file": None
     }
     with open(meta_path, "w") as f:
         json.dump(meta, f, indent=2)
+    os.chmod(meta_path, 0o600)
 
     print(f"[+] Профиль [{slot}] успешно сохранён для пользователя {args.username}")
     return 0
@@ -186,21 +187,21 @@ def main():
 
     # enroll
     enroll_p = subparsers.add_parser("enroll")
-    enroll_p.add_argument("username", nargs="?", default=os.environ.get("USER", "usernarne"))
+    enroll_p.add_argument("username", nargs="?", default=os.environ.get("USER", "unknown"))
     enroll_p.add_argument("--slot", choices=["primary", "alternative", "mask"], default="primary")
 
     # verify
     verify_p = subparsers.add_parser("verify")
-    verify_p.add_argument("username", nargs="?", default=os.environ.get("USER", "usernarne"))
+    verify_p.add_argument("username", nargs="?", default=os.environ.get("USER", "unknown"))
     verify_p.add_argument("--frame", type=str)
 
     # status
     status_p = subparsers.add_parser("status")
-    status_p.add_argument("username", nargs="?", default=os.environ.get("USER", "usernarne"))
+    status_p.add_argument("username", nargs="?", default=os.environ.get("USER", "unknown"))
 
     # reset
     reset_p = subparsers.add_parser("reset")
-    reset_p.add_argument("username", nargs="?", default=os.environ.get("USER", "usernarne"))
+    reset_p.add_argument("username", nargs="?", default=os.environ.get("USER", "unknown"))
     reset_p.add_argument("--slot", choices=["primary", "alternative", "mask"])
 
     args = parser.parse_args()

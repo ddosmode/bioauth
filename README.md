@@ -75,7 +75,7 @@ For a different webcam, pass `--device 1` **before** the command, e.g. `python3 
 
 ## Security and privacy matter
 
-The current enrollment code stores **both** the biometric vector (`.npy`) **and** the original camera frame (`.jpg`) in a local user/system configuration directory. Treat both as sensitive data. Never commit biometric profiles or share them in bug reports. The PAM wrapper currently contains a machine-specific filesystem path; review and fix it before attempting system integration. Keep a working password fallback and test failure cases before touching login or `sudo` configuration.
+The current enrollment code stores **both** the biometric vector (`.npy`) **and** the original camera frame (new enrollments now store vectors only) (`.jpg`) in a local user/system configuration directory. Treat both as sensitive data. Never commit biometric profiles or share them in bug reports. The PAM wrapper is experimental and requires review; review and fix it before attempting system integration. Keep a working password fallback and test failure cases before touching login or `sudo` configuration.
 
 ## Roadmap
 
