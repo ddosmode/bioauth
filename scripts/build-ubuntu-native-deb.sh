@@ -134,4 +134,4 @@ rm -f "$PKG/opt/bioauth/native/share/applications/org.gnome.Settings.desktop"
 rm -f "$PKG/opt/bioauth/native/share/dbus-1/services/org.gnome.Settings.service"
 dpkg-deb --build --root-owner-group "$PKG" "$OUT/BioAuth-FaceID-Ubuntu-26.04-amd64.deb"
 dpkg-deb -I "$OUT/BioAuth-FaceID-Ubuntu-26.04-amd64.deb"
-dpkg-deb -c "$OUT/BioAuth-FaceID-Ubuntu-26.04-amd64.deb" | grep -E '(/gnome-control-center|bioauth-panel.desktop|/bin/bioauth)' | head -35
+dpkg-deb -c "$OUT/BioAuth-FaceID-Ubuntu-26.04-amd64.deb" | grep -E '(/gnome-control-center|bioauth-panel.desktop|/bin/bioauth)' | sed -n '1,35p'
