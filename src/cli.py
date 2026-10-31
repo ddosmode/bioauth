@@ -43,11 +43,12 @@ def load_user_vectors(username: str) -> list[tuple[str, np.ndarray]]:
     """Загружает все зарегистрированные векторы пользователя (primary, alternative, mask)."""
     vectors = []
     # Проверяем оба пути (системный и пользовательский)
-    search_dirs = [
-        os.path.join(BASE_SYS_DIR, username),
-        os.path.join(BASE_USER_DIR, username),
-        os.path.expanduser("~/.config/bioauth/enrollment") # обратная совместимость
-    ]
+    search_dirs = [os.path.join(BASE_SYS_DIR, username)]
+    if not (os.geteuid() == 0 and os.environ.get("BIOAUTH_PAM_SYSTEM_ONLY") == "1"):
+        search_dirs += [
+            os.path.join(BASE_USER_DIR, username),
+            os.path.expanduser("~/.config/bioauth/enrollment")  # обратная совместимость
+        ]
     
     seen_slots = set()
     for s_dir in search_dirs:

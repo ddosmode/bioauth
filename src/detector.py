@@ -7,7 +7,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_YUNET_PATH = os.path.expanduser("~/.config/bioauth/models/face_detection_yunet_2023mar.onnx")
+DEFAULT_YUNET_PATH = ("/usr/share/bioauth/models/face_detection_yunet_2023mar.onnx" if
+                      os.geteuid() == 0 and os.environ.get("BIOAUTH_MODEL_SYSTEM_ONLY") == "1" else
+                      os.path.expanduser("~/.config/bioauth/models/face_detection_yunet_2023mar.onnx"))
 if not os.path.exists(DEFAULT_YUNET_PATH):
     DEFAULT_YUNET_PATH = "/usr/share/bioauth/models/face_detection_yunet_2023mar.onnx"
     if not os.path.exists(DEFAULT_YUNET_PATH):

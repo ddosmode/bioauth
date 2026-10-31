@@ -7,4 +7,4 @@ case "${PAM_USER:-}" in
 esac
 [ -f "/var/lib/bioauth/${PAM_USER}/enabled" ] || exit 1
 [ -f "/var/lib/bioauth/${PAM_USER}/primary.npy" ] || exit 1
-exec /usr/bin/timeout 6s /usr/bin/bioauth -q verify "$PAM_USER" >/dev/null 2>&1
+exec /usr/bin/env -i PATH=/usr/bin:/bin HOME=/root BIOAUTH_PAM_SYSTEM_ONLY=1 BIOAUTH_MODEL_SYSTEM_ONLY=1 /usr/bin/timeout 6s /usr/bin/bioauth -q verify "$PAM_USER" >/dev/null 2>&1

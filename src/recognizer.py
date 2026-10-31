@@ -7,7 +7,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SFACE_PATH = os.path.expanduser("~/.config/bioauth/models/face_recognition_sface_2021dec.onnx")
+DEFAULT_SFACE_PATH = ("/usr/share/bioauth/models/face_recognition_sface_2021dec.onnx" if
+                      os.geteuid() == 0 and os.environ.get("BIOAUTH_MODEL_SYSTEM_ONLY") == "1" else
+                      os.path.expanduser("~/.config/bioauth/models/face_recognition_sface_2021dec.onnx"))
 if not os.path.exists(DEFAULT_SFACE_PATH):
     DEFAULT_SFACE_PATH = "/usr/share/bioauth/models/face_recognition_sface_2021dec.onnx"
     if not os.path.exists(DEFAULT_SFACE_PATH):

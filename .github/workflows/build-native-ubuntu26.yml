@@ -33,6 +33,19 @@ jobs:
           dpkg-deb --info dist/BioAuth-FaceID-Ubuntu-26.04-amd64.deb
           dpkg-deb --contents dist/BioAuth-FaceID-Ubuntu-26.04-amd64.deb | grep '/opt/bioauth/native/bin/gnome-control-center'
           dpkg-deb --contents dist/BioAuth-FaceID-Ubuntu-26.04-amd64.deb | grep '/usr/share/applications/gnome-bioauth-panel.desktop'
+      - name: Install package and verify that Face ID is a native panel
+        run: |
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends gnome-control-center
+          DEBIAN_FRONTEND=noninteractive apt-get install -y ./dist/BioAuth-FaceID-Ubuntu-26.04-amd64.deb
+          test -x /usr/bin/gnome-control-center.bioauth-original
+          test -x /usr/bin/gnome-control-center
+          DISPLAY= WAYLAND_DISPLAY= gnome-control-center --list | tee /tmp/bioauth-panels.txt
+          grep -Eq '^[[:space:]]+bioauth$' /tmp/bioauth-panels.txt
+          /usr/bin/bioauth status root
+          DEBIAN_FRONTEND=noninteractive dpkg --remove bioauth-faceid
+          test -x /usr/bin/gnome-control-center
+          test ! -e /usr/bin/gnome-control-center.bioauth-original
+          DISPLAY= WAYLAND_DISPLAY= gnome-control-center --list | grep -q applications
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:

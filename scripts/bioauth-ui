@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """BioAuth face enrollment and diagnostic window for the native GNOME panel."""
 import getpass
+import os
 import subprocess
 import sys
 import threading
@@ -66,7 +67,8 @@ class BioAuthWindow(Gtk.ApplicationWindow):
             try:
                 cmd = ["/usr/bin/bioauth", ACTION, getpass.getuser()]
                 with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                      text=True, bufsize=1) as proc:
+                                      text=True, bufsize=1,
+                                      env={**os.environ, "PYTHONUNBUFFERED": "1"}) as proc:
                     for line in proc.stdout:
                         GLib.idle_add(self.append_log, line.rstrip())
                     code = proc.wait()
@@ -81,6 +83,6 @@ def activate(app):
     window.present()
 
 
-app = Gtk.Application(application_id="org.bioauth.FaceID")
+app = Gtk.Application(application_id="org.bioauth.FaceID." + ACTION)
 app.connect("activate", activate)
 sys.exit(app.run([]))
