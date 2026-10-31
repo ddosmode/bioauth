@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+BIN="${HOME}/.local/bin/bioauth"
+if ! test -x "$BIN"; then
+  echo "BioAuth not installed: run scripts/install-user.sh" >&2
+  exit 1
+fi
+if command -v zenity >/dev/null; then
+  choice="$(zenity --list --title='BioAuth — Face ID' --text='Локальная биометрия' --column='Действие' 'Зарегистрировать лицо' 'Проверить лицо' 'Состояние' 'Удалить профиль' --height=290 --width=360)" || exit 0
+  case "$choice" in
+    "Зарегистрировать лицо") exec "$BIN" enroll ;;
+    "Проверить лицо") exec "$BIN" verify ;;
+    "Состояние") exec "$BIN" status ;;
+    "Удалить профиль") exec "$BIN" reset ;;
+  esac
+else
+  exec "$BIN" status
+fi

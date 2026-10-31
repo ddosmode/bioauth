@@ -1,9 +1,9 @@
-# Active challenge — experimental only
+# Enrollment challenge and fast verification
 
-BioAuth requires a randomized **center → left/right → center** head-position challenge before comparing face embeddings. The command rejects static-image verification as an authentication path.
+The randomized motion challenge now runs **only during enrollment**. Verification captures a single frame to minimize latency.
 
-## Limitations
-This is **not** reliable protection against presentation attacks. A moving printed photograph, prerecorded video, camera-feed injection, or a real-time deepfake may satisfy the challenge. Horizontal image position is not equivalent to measured head pose. An attacker could reposition a screen. No claims of certified PAD, ISO/IEC 30107 evaluation, or production security are made.
+**Security warning:** Single-frame RGB face matching has NO reliable presentation-attack detection. A printed photograph, replayed video, or injected camera stream may authenticate. This change improves convenience, not security. **Never enable PAM login on this basis.**
 
-## Validation
-Automated tests cover synthetic sequences, stationary images, wrong direction, and missing face. Real-camera tests against printed photos, screens, replay, and injection have NOT been completed. Keep PAM disabled and passwords enabled.
+GNOME integration currently provides a searchable `BioAuth — Face ID` Settings-category launcher, **not** a native panel inside GNOME Control Center. The launcher requires Zenity for interactive choices.
+
+Latency target is not verified; cold camera start and model initialization may exceed 100 ms. Real-device benchmarks and a trained, validated passive PAD model are required.

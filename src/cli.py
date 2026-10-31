@@ -80,14 +80,13 @@ def cmd_enroll(args):
     target_vec_path = os.path.join(user_dir, f"{slot}.npy")
 
     print(f"[*] Сканирование лица ({slot}) для пользователя {args.username}...")
-    handler = VideoCaptureHandler(device_index=args.device, warmup_frames=5)
-    frame = handler.capture_frame()
-    if frame is None:
-        print("[-] Ошибка: Камера недоступна")
-        return 2
-
     detector = FaceDetector()
     recognizer = FaceRecognizer()
+    from src.liveness import capture_with_challenge
+    frame = capture_with_challenge(args.device, detector)
+    if frame is None:
+        print("[-] Не удалось завершить регистрацию: камера или проверка движения")
+        return 2
 
     faces = detector.detect(frame)
     if len(faces) == 0:
@@ -137,11 +136,10 @@ def cmd_verify(args):
 
     detector = FaceDetector()
     recognizer = FaceRecognizer()
-    from src.liveness import capture_with_challenge
-    frame = capture_with_challenge(args.device, detector)
+    # Fast single-frame verification. Not a certified presentation attack detector.
+    handler = VideoCaptureHandler(device_index=args.device, warmup_frames=0, timeout=0.7)
+    frame = handler.capture_frame()
     if frame is None:
-        if not args.quiet:
-            print("[-] Liveness challenge failed or camera unavailable")
         return 1
 
     faces = detector.detect(frame)

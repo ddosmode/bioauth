@@ -12,6 +12,19 @@ python3 -m venv "$VENV"
 "$VENV/bin/python" -m pip install --upgrade pip
 "$VENV/bin/python" -m pip install "$ROOT"
 ln -sfn "$VENV/bin/bioauth" "${HOME}/.local/bin/bioauth"
+install -m 755 "$ROOT/scripts/bioauth-settings" "${HOME}/.local/bin/bioauth-settings"
+mkdir -p "${HOME}/.local/share/applications"
+cat > "${HOME}/.local/share/applications/bioauth-settings.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=BioAuth — Face ID
+Comment=Face enrollment and local biometric settings
+Exec=${HOME}/.local/bin/bioauth-settings
+Icon=avatar-default
+Terminal=true
+Categories=Settings;Security;
+Keywords=Face ID;FaceID;BioAuth;биометрия;лицо;
+EOF
 echo "Installed: ${HOME}/.local/bin/bioauth"
 "$VENV/bin/bioauth" install-models
 echo "YuNet and SFace models installed with SHA256 verification."
