@@ -1,0 +1,10 @@
+#!/bin/sh
+# Invoked only by GDM PAM when the user opted into BioAuth.
+[ "${PAM_TYPE:-}" = "auth" ] || exit 1
+[ "${PAM_SERVICE:-}" = "gdm-password" ] || exit 1
+case "${PAM_USER:-}" in
+  ''|*[!a-zA-Z0-9_-]*) exit 1 ;;
+esac
+[ -f "/var/lib/bioauth/${PAM_USER}/enabled" ] || exit 1
+[ -f "/var/lib/bioauth/${PAM_USER}/primary.npy" ] || exit 1
+exec /usr/bin/timeout 6s /usr/bin/bioauth -q verify "$PAM_USER" >/dev/null 2>&1

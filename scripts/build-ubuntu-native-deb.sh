@@ -56,6 +56,9 @@ BIN
 chmod 755 "$PKG/usr/bin/bioauth"
 cp "$ROOT/scripts/bioauth-ui" "$PKG/usr/bin/bioauth-ui"
 chmod 755 "$PKG/usr/bin/bioauth-ui"
+cp "$ROOT/scripts/pam-gdm-toggle" "$PKG/usr/lib/bioauth/pam-gdm-toggle"
+cp "$ROOT/scripts/pam-verify" "$PKG/usr/lib/bioauth/pam-verify"
+chmod 755 "$PKG/usr/lib/bioauth/pam-gdm-toggle" "$PKG/usr/lib/bioauth/pam-verify"
 python3 - "$PKG/usr/share/bioauth/models" "$ROOT" <<'PY'
 import sys
 sys.path.insert(0, sys.argv[2])
@@ -71,7 +74,7 @@ Section: gnome
 Priority: optional
 Architecture: amd64
 Maintainer: BioAuth Project <noreply@github.com>
-Depends: gnome-control-center (>= 1:50~), gnome-control-center (<< 1:51~), python3, python3-opencv, python3-numpy, python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1, policykit-1, ${misc:Depends}
+Depends: gnome-control-center (>= 1:50~), gnome-control-center (<< 1:51~), python3, python3-opencv, python3-numpy, python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1, pkexec, ${misc:Depends}
 Description: Native BioAuth Face ID panel inside GNOME Settings on Ubuntu 26.04
  Installs a matching GNOME Control Center with the Face ID sidebar panel.
  Preserves and restores Ubuntu's original GNOME binary through dpkg-divert.
@@ -115,7 +118,17 @@ case "${1:-}" in
 esac
 exit 0
 POSTRM
-chmod 755 "$PKG/DEBIAN/postinst" "$PKG/DEBIAN/postrm"
+cat > "$PKG/DEBIAN/prerm" <<'PRERM'
+#!/bin/sh
+set -eu
+case "${1:-}" in
+  remove|deconfigure)
+    /usr/lib/bioauth/pam-gdm-toggle disable-all || true
+    ;;
+esac
+exit 0
+PRERM
+chmod 755 "$PKG/DEBIAN/postinst" "$PKG/DEBIAN/postrm" "$PKG/DEBIAN/prerm"
 # Do not include conflicting GNOME .desktop/DBus launcher files installed by Meson.
 rm -f "$PKG/opt/bioauth/native/share/applications/org.gnome.Settings.desktop"
 rm -f "$PKG/opt/bioauth/native/share/dbus-1/services/org.gnome.Settings.service"

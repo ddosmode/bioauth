@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Explicit opt-in GDM face authentication. Password fallback is kept intact.
+set -Eeuo pipefail
+[[ "$EUID" -eq 0 ]] || { echo "Run via pkexec (root)" >&2; exit 1; }
+command="${1:-}"
+username="${2:-}"
+pam="/etc/pam.d/gdm-password"
+line="auth sufficient pam_exec.so quiet /usr/lib/bioauth/pam-verify"
+if [[ "$command" == "disable-all" ]]; then
+  [[ -f "$pam" ]] || exit 0
+  tmp="$(mktemp /etc/pam.d/.bioauth.XXXXXX)"
+  trap 'rm -f "$tmp"' EXIT
+  grep -Fvx "$line" "$pam" > "$tmp" || true
+  chmod --reference="$pam" "$tmp"
+  chown --reference="$pam" "$tmp"
+  mv "$tmp" "$pam"
+  exit 0
+fi
+[[ "$command" == enable || "$command" == disable ]] || exit 2
+[[ "$username" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || exit 2
+entry="$(getent passwd "$username")" || exit 2
+IFS=: read -r _ _ uid gid gecos home shell <<< "$entry"
+[[ "$uid" =~ ^[0-9]+$ && "$uid" -ge 1000 && "$uid" -lt 60000 ]] || exit 2
+folder="/var/lib/bioauth/$username"
+if [[ "$command" == disable ]]; then
+  rm -f "$folder/enabled"
+  exit 0
+fi
+[[ -f "$pam" ]] || { echo "GDM password PAM service missing" >&2; exit 1; }
+source_dir="$home/.config/bioauth/users/$username"
+source_file="$source_dir/primary.npy"
+[[ -f "$source_file" && ! -L "$source_file" ]] || { echo "Enroll a face before enabling login." >&2; exit 1; }
+owner="$(stat -c %u "$source_file")"
+[[ "$owner" == "$uid" ]] || { echo "Enrollment owner mismatch" >&2; exit 1; }
+[[ "$(stat -c %s "$source_file")" -le 1048576 ]] || { echo "Enrollment too large" >&2; exit 1; }
+# Check file shape before copying. Does not execute pickle data.
+BIOAUTH_SRC="$source_file" /usr/bin/python3 - <<'PY'
+import numpy as np
+import os
+v = np.load(os.environ["BIOAUTH_SRC"], allow_pickle=False)
+if v.size != 128 or not np.issubdtype(v.dtype, np.number) or not np.isfinite(v).all():
+    raise SystemExit("Invalid biometric template")
+PY
+install -d -m 0700 -o root -g root /var/lib/bioauth "$folder"
+install -m 0600 -o root -g root "$source_file" "$folder/primary.npy"
+touch "$folder/enabled"
+chmod 0600 "$folder/enabled"
+chown root:root "$folder/enabled"
+if ! grep -Fqx "$line" "$pam"; then
+  tmp="$(mktemp /etc/pam.d/.bioauth.XXXXXX)"
+  trap 'rm -f "$tmp"' EXIT
+  printf '%s\n' "$line" > "$tmp"
+  cat "$pam" >> "$tmp"
+  chmod --reference="$pam" "$tmp"
+  chown --reference="$pam" "$tmp"
+  mv "$tmp" "$pam"
+fi
+echo "GDM face login enabled for $username. Password fallback remains available."

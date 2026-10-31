@@ -42,12 +42,12 @@ class BioAuthWindow(Gtk.ApplicationWindow):
         scroll.set_child(view)
         self.log = view.get_buffer()
         self.button = Gtk.Button(label="Close")
+        self.button.connect("clicked", lambda _: self.close())
         container.append(self.button)
         if ACTION == "reset":
             self.button.set_label("Delete profile")
             self.button.connect("clicked", lambda _: self.launch())
         else:
-            self.button.connect("clicked", lambda _: self.close())
             self.launch()
 
     def append_log(self, message):

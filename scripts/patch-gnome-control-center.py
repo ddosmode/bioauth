@@ -41,7 +41,7 @@ Categories=GNOME;GTK;Settings;X-GNOME-PrivacySettings;
 Keywords=Face;BioAuth;Biometrics;
 """)
     (target / "cc-bioauth-panel.c").write_text(r'''#include <glib/gi18n.h>
-#include "cc-panel.h"
+#include "shell/cc-panel.h"
 
 typedef struct {
   CcPanel parent_instance;
@@ -69,9 +69,9 @@ cc_bioauth_panel_init (CcBioauthPanel *self)
   gtk_widget_set_margin_end (box, 24);
   gtk_widget_set_margin_bottom (box, 24);
   gtk_box_append (GTK_BOX (box), gtk_label_new (_("Face ID — BioAuth")));
-  gtk_box_append (GTK_BOX (box), gtk_label_new (_("Experimental: PAM login remains disabled.")));
-  const char *labels[] = { "Enroll face", "Verify face", "Profile status", NULL };
-  const char *actions[] = { "enroll", "verify", "status" };
+  gtk_box_append (GTK_BOX (box), gtk_label_new (_("Experimental camera-based face login. A photo may defeat verification.")));
+  const char *labels[] = { "Enroll and enable login", "Verify face", "Profile status", "Disable face login", NULL };
+  const char *actions[] = { "activate", "verify", "status", "disable" };
   for (int i = 0; labels[i]; i++) {
     GtkWidget *button = gtk_button_new_with_label (labels[i]);
     g_object_set_data_full (G_OBJECT (button), "bioauth-action", g_strdup (actions[i]), g_free);
