@@ -1,0 +1,86 @@
+#!/usr/bin/python3
+"""BioAuth face enrollment and diagnostic window for the native GNOME panel."""
+import getpass
+import subprocess
+import sys
+import threading
+import gi
+
+gi.require_version("Gtk", "4.0")
+from gi.repository import Gtk, GLib
+
+ACTIONS = {"enroll", "verify", "status", "reset"}
+ACTION = sys.argv[1] if len(sys.argv) > 1 else "status"
+if ACTION not in ACTIONS:
+    sys.exit("Unsupported action")
+
+
+class BioAuthWindow(Gtk.ApplicationWindow):
+    def __init__(self, app):
+        super().__init__(application=app, title="BioAuth — Face ID")
+        self.set_default_size(540, 330)
+        container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        container.set_margin_top(20)
+        container.set_margin_bottom(20)
+        container.set_margin_start(20)
+        container.set_margin_end(20)
+        self.set_child(container)
+        heading = Gtk.Label(label="BioAuth — Face ID", xalign=0)
+        heading.add_css_class("title-2")
+        container.append(heading)
+        description = {
+            "enroll": "Keep one face in view. Follow the center–side–center instructions.",
+            "verify": "Look at your camera for verification.",
+            "status": "Saved biometric profiles:",
+            "reset": "Remove the face profile for this account.",
+        }[ACTION]
+        info = Gtk.Label(label=description, xalign=0, wrap=True)
+        container.append(info)
+        scroll = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
+        container.append(scroll)
+        view = Gtk.TextView(editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD_CHAR)
+        scroll.set_child(view)
+        self.log = view.get_buffer()
+        self.button = Gtk.Button(label="Close")
+        container.append(self.button)
+        if ACTION == "reset":
+            self.button.set_label("Delete profile")
+            self.button.connect("clicked", lambda _: self.launch())
+        else:
+            self.button.connect("clicked", lambda _: self.close())
+            self.launch()
+
+    def append_log(self, message):
+        it = self.log.get_end_iter()
+        self.log.insert(it, message + "\n")
+        return False
+
+    def finish(self, code):
+        self.append_log("Success" if code == 0 else f"Failed (exit {code})")
+        return False
+
+    def launch(self):
+        if ACTION == "reset":
+            self.button.set_sensitive(False)
+        def worker():
+            try:
+                cmd = ["/usr/bin/bioauth", ACTION, getpass.getuser()]
+                with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                      text=True, bufsize=1) as proc:
+                    for line in proc.stdout:
+                        GLib.idle_add(self.append_log, line.rstrip())
+                    code = proc.wait()
+                GLib.idle_add(self.finish, code)
+            except Exception as exc:
+                GLib.idle_add(self.append_log, f"Error: {exc}")
+        threading.Thread(target=worker, daemon=True).start()
+
+
+def activate(app):
+    window = BioAuthWindow(app)
+    window.present()
+
+
+app = Gtk.Application(application_id="org.bioauth.FaceID")
+app.connect("activate", activate)
+sys.exit(app.run([]))

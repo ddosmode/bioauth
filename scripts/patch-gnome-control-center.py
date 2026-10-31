@@ -53,7 +53,7 @@ static void
 on_action (GtkButton *button, gpointer data)
 {
   const char *action = g_object_get_data (G_OBJECT (button), "bioauth-action");
-  const char *argv[] = { "/usr/bin/env", "bioauth", action, NULL };
+  const char *argv[] = { "/usr/bin/bioauth-ui", action, NULL };
   g_autoptr(GError) error = NULL;
   if (!g_spawn_async (NULL, (char **) argv, NULL,
                       G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error))

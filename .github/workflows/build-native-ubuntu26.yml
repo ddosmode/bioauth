@@ -1,0 +1,41 @@
+name: Build native BioAuth Face ID deb (Ubuntu 26.04)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/build-ubuntu-native-deb.sh'
+      - 'scripts/patch-gnome-control-center.py'
+      - 'scripts/bioauth-ui'
+      - 'src/**'
+      - '.github/workflows/build-native-ubuntu26.yml'
+permissions:
+  contents: write
+jobs:
+  deb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    container:
+      image: ubuntu:26.04
+      options: --user root
+    steps:
+      - name: Install checkout prerequisites
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y git ca-certificates bash
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build native package
+        run: |
+          chmod +x scripts/build-ubuntu-native-deb.sh scripts/bioauth-ui
+          bash scripts/build-ubuntu-native-deb.sh "$GITHUB_WORKSPACE/dist"
+      - name: Verify Debian package contents
+        run: |
+          dpkg-deb --info dist/BioAuth-FaceID-Ubuntu-26.04-amd64.deb
+          dpkg-deb --contents dist/BioAuth-FaceID-Ubuntu-26.04-amd64.deb | grep '/opt/bioauth/native/bin/gnome-control-center'
+          dpkg-deb --contents dist/BioAuth-FaceID-Ubuntu-26.04-amd64.deb | grep '/usr/share/applications/gnome-bioauth-panel.desktop'
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: BioAuth-FaceID-Ubuntu-26.04-amd64
+          path: dist/BioAuth-FaceID-Ubuntu-26.04-amd64.deb
+          if-no-files-found: error
