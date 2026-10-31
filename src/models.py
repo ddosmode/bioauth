@@ -5,7 +5,7 @@ import os
 import tempfile
 from urllib.request import urlopen
 
-BASE = "https://raw.githubusercontent.com/opencv/opencv_zoo/main/models"
+BASE = "https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models"
 MODELS = {
     "face_detection_yunet_2023mar.onnx": (
         "face_detection_yunet",
