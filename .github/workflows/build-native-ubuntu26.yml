@@ -39,13 +39,13 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y ./dist/BioAuth-FaceID-Ubuntu-26.04-amd64.deb
           test -x /usr/bin/gnome-control-center.bioauth-original
           test -x /usr/bin/gnome-control-center
-          DISPLAY= WAYLAND_DISPLAY= gnome-control-center --list | tee /tmp/bioauth-panels.txt
+          XDG_CURRENT_DESKTOP=GNOME DISPLAY= WAYLAND_DISPLAY= gnome-control-center --list | tee /tmp/bioauth-panels.txt
           grep -Eq '^[[:space:]]+bioauth$' /tmp/bioauth-panels.txt
           /usr/bin/bioauth status root
           DEBIAN_FRONTEND=noninteractive dpkg --remove bioauth-faceid
           test -x /usr/bin/gnome-control-center
           test ! -e /usr/bin/gnome-control-center.bioauth-original
-          DISPLAY= WAYLAND_DISPLAY= gnome-control-center --list | grep -q applications
+          XDG_CURRENT_DESKTOP=GNOME DISPLAY= WAYLAND_DISPLAY= gnome-control-center --list | grep -q applications
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
